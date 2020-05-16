@@ -186,7 +186,6 @@ public class MainService {
 				//添加表单数据
 				dataVos.add(item);
 				data.add(new BasicNameValuePair("radio_" + i, item.getSelectId()));
-				System.out.println(gson.toJson(item));
 			}
 
 			//多余的信息
