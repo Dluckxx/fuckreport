@@ -79,6 +79,14 @@ public class MainService {
 	}
 
 	/**
+	 * 获取全部的用户
+	 * @return 用户列表
+	 */
+	public List<User> getAllUser() {
+		return userRepository.findAll();
+	}
+
+	/**
 	 * 模拟一次登陆，获取Cookie信息
 	 *
 	 * @param uid 学号
@@ -226,6 +234,7 @@ public class MainService {
 		CookieStore cookieStore;
 		try {
 			cookieStore = getLoginCookie(uid);
+			if (cookieStore == null) return "系统没有这个用户！";
 		} catch (IOException e) {
 			e.printStackTrace();
 			return "登陆失败!";

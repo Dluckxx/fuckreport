@@ -1,17 +1,118 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
+    <title>fuck</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script>document.getElementsByTagName("html")[0].className += " js";</script>
     <link id="codyframe" rel="stylesheet" href="../static/style.css">
     <!-- browsers not supporting CSS variables -->
     <script>
-        if(!('CSS' in window) || !CSS.supports('color', 'var(--color-var)')) {var cfStyle = document.getElementById('codyframe');if(cfStyle) {var href = cfStyle.getAttribute('href');href = href.replace('style.css', 'style-fallback.css');cfStyle.setAttribute('href', href);}}
+        if (!('CSS' in window) || !CSS.supports('color', 'var(--color-var)')) {
+            var cfStyle = document.getElementById('codyframe');
+            if (cfStyle) {
+                var href = cfStyle.getAttribute('href');
+                href = href.replace('style.css', 'style-fallback.css');
+                cfStyle.setAttribute('href', href);
+            }
+        }
     </script>
-    <title>fuck</title>
 </head>
 <body>
-<h1>自动打卡打卡系统</h1>
+<div class="container max-width-lg margin-top-lg text-center">
+    <h1 class="text-center">自动打卡系统</h1>
+    <table class="table table--expanded@sm position-relative z-index-1 width-100% js-table" aria-label="Table Example">
+        <thead class="table__header table__header--sticky">
+        <tr class="table__row">
+            <th class="table__cell text-center" scope="col">姓名</th>
+            <th class="table__cell text-center" scope="col">描述</th>
+            <th class="table__cell text-center" scope="col">状态</th>
+            <th class="table__cell text-center" scope="col">操作</th>
+        </tr>
+        </thead>
+        <tbody class="table__body">
+        <tr class="table__row" th:each="user,userStat : ${userList}" th:id="${user.getUid()}"
+            onload="load(this.this.getAttribute('id'))">
+            <!--0.姓名-->
+            <td class="table__cell text-center" role="cell" th:text="${user.getName()}">NULL</td>
+            <!--1.描述-->
+            <td class="table__cell text-center" role="cell">获取中...</td>
+            <!--2.状态图标-->
+            <td class="table__cell text-center" role="cell">
+                <svg class="icon icon--md" viewBox="0 0 48 48" style="display: none">
+                    <path d="M24,47A23,23,0,1,1,47,24,23.026,23.026,0,0,1,24,47Z" fill="#87c458"/>
+                    <polyline points="12 24 20 32 36 16" fill="none" stroke="#fff" stroke-linecap="square"
+                              stroke-miterlimit="10" stroke-width="4"/>
+                </svg>
+                <svg class="icon icon--md" viewBox="0 0 48 48" style="display: none">
+                    <title>Option not available</title>
+                    <path d="M24,47A23,23,0,1,1,47,24,23.026,23.026,0,0,1,24,47Z" fill="#f54250"/>
+                    <line x1="33" y1="15" x2="15" y2="33" fill="none" stroke="#fff" stroke-linecap="square"
+                          stroke-miterlimit="10" stroke-width="4"/>
+                    <line x1="15" y1="15" x2="33" y2="33" fill="none" stroke="#fff" stroke-linecap="square"
+                          stroke-miterlimit="10" stroke-width="4"/>
+                </svg>
+            </td>
+            <!--3.操作-->
+            <td class="table__cell text-center" role="cell">
+                <button class="btn btn--accent" th:data-id="${user.getUid()}"
+                        onclick="report(this.getAttribute('data-id'))"> 打卡
+                </button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <a class="max-width-xxxs margin-auto margin-top-lg block" href="http://dluck.synology.me:8086/register">
+        <button class="btn btn--primary">点我去注册！</button>
+    </a>
+</div>
+<script>
+    window.onload = function () {
+        let elements = document.getElementsByClassName("table__row");
+        Array.prototype.forEach.call(elements, function (element) {
+            let uid = element.getAttribute("id");
+            load(uid);
+        });
+    };
+
+    function load(uid) {
+        let httpRequest = new XMLHttpRequest();
+        httpRequest.open('GET', "http://dluck.synology.me:8086/api/check?uid=" + uid, true);
+        httpRequest.send();
+        httpRequest.onreadystatechange = function () {
+            if (httpRequest.readyState === 4 && httpRequest.status === 200) {
+                document.getElementById(uid).children[1].innerHTML = httpRequest.responseText;
+                if (httpRequest.responseText === '当前采集日期已登记！') {
+                    document.getElementById(uid).children[2].firstElementChild.removeAttribute("style");
+                    document.getElementById(uid).children[3].firstElementChild.setAttribute("class", "btn btn--subtle");
+                } else {
+                    document.getElementById(uid).children[2].lastElementChild.removeAttribute("style");
+                    document.getElementById(uid).children[3].firstElementChild.setAttribute("class", "btn btn--accent");
+                }
+            }
+        };
+    }
+
+    function report(uid) {
+        let httpRequest = new XMLHttpRequest();
+        httpRequest.open('GET', "http://dluck.synology.me:8086/api/conform?uid=" + uid, true);
+        httpRequest.send();
+        httpRequest.onreadystatechange = function () {
+            if (httpRequest.readyState === 4 && httpRequest.status === 200) {
+                if (window.confirm(httpRequest.responseText)) {
+                    let httpRequest2 = new XMLHttpRequest();
+                    httpRequest2.open('GET', "http://dluck.synology.me:8086/api/report?uid=" + uid, true);
+                    httpRequest2.send();
+                    if (httpRequest2.readyState === 4 && httpRequest2.status === 200) {
+                        window.reload();
+                    } else {
+                        window.alert(httpRequest2.responseText);
+                    }
+                }
+            }
+        };
+    }
+</script>
+<script src="../static/scripts.js"></script>
 </body>
 </html>

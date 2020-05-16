@@ -56,7 +56,7 @@ gulp.task('scripts', function() {
 gulp.task('browserSync', gulp.series(function (done) {
   browserSync.init({
     server: {
-      baseDir: '../src/main/resources/templates'
+      baseDir: '../src/main/resources'
     },
     notify: false
   })

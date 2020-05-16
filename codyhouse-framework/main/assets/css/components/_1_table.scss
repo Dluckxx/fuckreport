@@ -1,0 +1,130 @@
+/* --------------------------------
+
+File#: _1_table
+Title: Table
+Descr: Data tables used to organize and display information in rows and columns
+Usage: codyhouse.co/license
+
+-------------------------------- */
+
+// >>> style affecting all (block + expanded) versions 👇
+.table {}
+// <<< end style affecting all versions
+
+// >>> block version only (mobile) 👇
+.table:not(.table--expanded) {
+  border-collapse: separate;
+  border-spacing: 0 var(--space-md); // row gap
+  margin-top: calc(-2 * var(--space-md)); // set spacing variable = row gap ☝️
+
+  .table__header { // hide table header - but keep it accessible to SR
+    @include srHide;
+  }
+
+  .table__row {
+    .table__cell:first-child {
+      border-radius: var(--radius-md) var(--radius-md) 0 0;
+    }
+
+    .table__cell:last-child {
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+
+      &::after { // hide border bottom
+        display: none;
+      }
+    }
+  }
+
+  .table__cell {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    text-align: right;
+    padding: var(--space-md);
+    background-color: var(--color-contrast-lower);
+
+    &::after { // border bottom
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: var(--space-md);
+      width: calc(100% - (2 * var(--space-md)));
+      height: 1px;
+      background-color: var(--color-contrast-low);
+    }
+  }
+
+  .table__label { // inline labels -> visible when table header is hidden
+    font-weight: bold;
+    text-align: left;
+    color: var(--color-contrast-higher);
+    margin-right: var(--space-md);
+  }
+}
+// <<< end block version
+
+// >>> expanded version only (desktop) 👇 -> show standard rows and cols
+.table--expanded {
+  border-bottom: 2px solid var(--color-contrast-low); // table border bottom
+
+  .table__header {
+    .table__cell { // header cell style
+      position: relative;
+      z-index: 10;
+      background-color: var(--color-bg);
+      box-shadow: 0 2px 0 var(--color-contrast-low); // header border bottom
+      font-weight: bold;
+      color: var(--color-contrast-higher);
+    }
+  }
+
+  .table__body {
+    .table__row {
+      &:nth-child(odd) {
+        background-color: var(--color-contrast-lower);
+      }
+    }
+  }
+
+  .table__cell {
+    padding: var(--space-sm);
+  }
+
+  .table__label { // hide inline labels
+    display: none;
+  }
+
+  // --header-sticky
+  .table__header--sticky {
+    .table__cell { // header cell style
+      position: sticky;
+      top: 0;
+    }
+  }
+}
+// <<< end expanded version
+
+.js {
+  .table {
+    opacity: 0; // hide table while it is initialized in JS
+  }
+
+  .table--loaded {
+    opacity: 1;
+  }
+}
+
+// detect when the table needs to switch from the mobile layout to an expanded one - used in JS
+[class*="table--expanded"]::before {
+  display: none;
+}
+
+@each $breakpoint, $value in $breakpoints {
+  .table--expanded\@#{$breakpoint}::before {
+    content: 'collapsed';
+    @include breakpoint(#{$breakpoint}) {
+      content: 'expanded';
+    }
+  }
+}

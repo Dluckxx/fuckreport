@@ -1,11 +1,16 @@
 package dluck.fuckreport.controller;
 
 import dluck.fuckreport.service.MainService;
+import org.apache.http.NameValuePair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -31,6 +36,32 @@ public class ApiController {
 	@GetMapping("check")
 	public String check(@RequestParam("uid") String uid) {
 		return mainService.check(uid);
+	}
+
+	/**
+	 * 获取表单信息接口
+	 *
+	 * @param uid 学号
+	 * @return 表单信息字符串
+	 */
+	@GetMapping("conform")
+	public String conform(@RequestParam("uid") String uid) {
+		List<NameValuePair> list;
+		try {
+			list = mainService.getPostData(uid);
+			if (list == null) return "～已经打过卡了～";
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "获取打卡表单数据出错了！";
+		}
+		StringBuilder sb = new StringBuilder();
+		for (NameValuePair item : list) {
+			sb.append(item.getName())
+					.append(" : ")
+					.append(item.getValue())
+					.append("\n");
+		}
+		return sb.toString();
 	}
 
 	/**

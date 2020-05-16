@@ -1,10 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
     <title>注册</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>document.getElementsByTagName("html")[0].className += " js";</script>
+    <link id="codyframe" rel="stylesheet" href="../static/style.css">
+    <!-- browsers not supporting CSS variables -->
+    <script>
+        if (!('CSS' in window) || !CSS.supports('color', 'var(--color-var)')) {
+            var cfStyle = document.getElementById('codyframe');
+            if (cfStyle) {
+                var href = cfStyle.getAttribute('href');
+                href = href.replace('style.css', 'style-fallback.css');
+                cfStyle.setAttribute('href', href);
+            }
+        }
+    </script>
 </head>
 <body>
+<div class="container max-width-lg">
+    <form class="sign-up-form">
+        <div class="text-component text-center margin-bottom-sm">
+            <h1>从这里开始</h1>
+            <p>注册后即可使用一键打卡功能，后续将会升级成自动打卡。</p>
+        </div>
 
+        <div class="margin-bottom-sm">
+            <div class="grid gap-xs">
+                <div class="col-6@md">
+                    <label class="form-label margin-bottom-xxxs" for="name">姓名</label>
+                    <input class="form-control width-100%" type="text" name="name" id="name">
+                </div>
+
+                <div class="col-6@md">
+                    <label class="form-label margin-bottom-xxxs" for="uid">学号</label>
+                    <input class="form-control width-100%" type="text" name="uid" id="uid">
+                </div>
+            </div>
+        </div>
+
+        <div class="margin-bottom-sm">
+            <label class="form-label margin-bottom-xxxs" for="email">Email</label>
+            <input class="form-control width-100%" type="email" name="email" id="email" placeholder="email@myemail.com">
+        </div>
+
+        <div class="margin-bottom-md">
+            <label class="form-label margin-bottom-xxxs" for="password">Password</label>
+            <input class="form-control width-100%" type="password" name="password" id="password">
+            <p class="text-xs color-contrast-medium margin-top-xxs">Minimum 6 characters</p>
+        </div>
+
+        <div class="margin-bottom-sm">
+            <button class="btn btn--primary btn--md width-100%">一键起飞</button>
+        </div>
+
+        <div class="text-center">
+            <p class="text-xs color-contrast-medium">注册后即可使用在线自动打卡系统！</p>
+        </div>
+    </form>
+</div>
+<script>
+    function register() {
+        var data = new FormData();
+        data.append("")
+
+        let httpRequest = new XMLHttpRequest();
+        httpRequest.open('GET', "http://dluck.synology.me:8086/api/register", true);
+        httpRequest.send();
+        httpRequest.onreadystatechange = function () {
+            if (httpRequest.readyState === 4 && httpRequest.status === 200) {
+                document.getElementById(uid).children[1].innerHTML = httpRequest.responseText;
+                if (httpRequest.responseText === '当前采集日期已登记！') {
+                    document.getElementById(uid).children[2].firstElementChild.removeAttribute("style");
+                    document.getElementById(uid).children[3].firstElementChild.setAttribute("class", "btn btn--subtle");
+                } else {
+                    document.getElementById(uid).children[2].lastElementChild.removeAttribute("style");
+                    document.getElementById(uid).children[3].firstElementChild.setAttribute("class", "btn btn--accent");
+                }
+            }
+        };
+    }
+</script>
+<script src="../static/scripts.js"></script>
 </body>
 </html>
