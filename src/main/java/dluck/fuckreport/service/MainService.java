@@ -41,6 +41,7 @@ public class MainService {
 
 	/**
 	 * 添加一个用户
+	 *
 	 * @param uid   学号
 	 * @param name  姓名
 	 * @param pwd   密码
@@ -65,12 +66,12 @@ public class MainService {
 	/**
 	 * 删除一个用户
 	 *
-	 * @param user 用户对象
+	 * @param uid 学号
 	 * @return 如果成功返回true，否则false
 	 */
-	public boolean removeUser(User user) {
-		if (userRepository.findById(user.getUid()).isPresent()) {
-			userRepository.delete(user);
+	public boolean removeUser(String uid) {
+		if (userRepository.findById(uid).isPresent()) {
+			userRepository.delete(userRepository.findById(uid).get());
 			return true;
 		} else {
 			return false;
