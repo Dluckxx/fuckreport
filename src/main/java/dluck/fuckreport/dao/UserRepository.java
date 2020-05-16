@@ -1,4 +1,4 @@
-package dluck.fuckreport.repository;
+package dluck.fuckreport.dao;
 
 import dluck.fuckreport.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
