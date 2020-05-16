@@ -34,7 +34,7 @@ public class MainController {
 	 * 注册一个账户
 	 * @return 注册页面
 	 */
-	@PostMapping("register")
+	@GetMapping("register")
 	public String register() {
 		return "register";
 	}

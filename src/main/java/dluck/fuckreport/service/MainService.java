@@ -287,6 +287,7 @@ public class MainService {
 		CookieStore cookieStore;
 		try {
 			cookieStore = getLoginCookie(uid);
+			if (cookieStore == null) return "登陆失败！";
 		} catch (IOException e) {
 			e.printStackTrace();
 			return "登陆失败！";

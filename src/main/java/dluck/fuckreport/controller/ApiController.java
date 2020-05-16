@@ -3,10 +3,7 @@ package dluck.fuckreport.controller;
 import dluck.fuckreport.service.MainService;
 import org.apache.http.NameValuePair;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,7 +46,7 @@ public class ApiController {
 		List<NameValuePair> list;
 		try {
 			list = mainService.getPostData(uid);
-			if (list == null) return "～已经打过卡了～";
+			if (list == null) return "已经打过卡或者出现错误！";
 		} catch (IOException e) {
 			e.printStackTrace();
 			return "获取打卡表单数据出错了！";
@@ -84,7 +81,7 @@ public class ApiController {
 	 * @param email    邮箱
 	 * @return 状态
 	 */
-	@GetMapping("register")
+	@PostMapping("register")
 	public String register(@RequestParam("uid") String uid,
 	                       @RequestParam("name") String name,
 	                       @RequestParam("password") String password,

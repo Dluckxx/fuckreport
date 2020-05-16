@@ -42,7 +42,7 @@
 
         <div class="margin-bottom-sm">
             <label class="form-label margin-bottom-xxxs" for="email">Email</label>
-            <input class="form-control width-100%" type="email" name="email" id="email" placeholder="email@myemail.com">
+            <input class="form-control width-100%" type="email" name="email" id="email" placeholder="example@email.com">
         </div>
 
         <div class="margin-bottom-md">
@@ -52,7 +52,7 @@
         </div>
 
         <div class="margin-bottom-sm">
-            <button class="btn btn--primary btn--md width-100%">一键起飞</button>
+            <button class="btn btn--primary btn--md width-100%" onclick="register()">一键起飞</button>
         </div>
 
         <div class="text-center">
@@ -62,22 +62,21 @@
 </div>
 <script>
     function register() {
-        var data = new FormData();
-        data.append("")
+        let data = new FormData();
+        data.append("uid", document.getElementById("uid").value);
+        data.append("name", document.getElementById("name").value);
+        data.append("password", document.getElementById("password").value);
+        data.append("email", document.getElementById("email").value);
 
-        let httpRequest = new XMLHttpRequest();
-        httpRequest.open('GET', "http://dluck.synology.me:8086/api/register", true);
-        httpRequest.send();
-        httpRequest.onreadystatechange = function () {
-            if (httpRequest.readyState === 4 && httpRequest.status === 200) {
-                document.getElementById(uid).children[1].innerHTML = httpRequest.responseText;
-                if (httpRequest.responseText === '当前采集日期已登记！') {
-                    document.getElementById(uid).children[2].firstElementChild.removeAttribute("style");
-                    document.getElementById(uid).children[3].firstElementChild.setAttribute("class", "btn btn--subtle");
-                } else {
-                    document.getElementById(uid).children[2].lastElementChild.removeAttribute("style");
-                    document.getElementById(uid).children[3].firstElementChild.setAttribute("class", "btn btn--accent");
-                }
+        let xhr = new XMLHttpRequest();
+        xhr.open('POST', "http://dluck.synology.me:8086/api/register", false);
+        xhr.send(data);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                alert(xhr.responseText);
+                window.location.href = "http://dluck.synology.me:8086";
+            } else {
+                alert("连接服务器失败或错误！");
             }
         };
     }

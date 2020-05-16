@@ -85,6 +85,7 @@
                 if (httpRequest.responseText === '当前采集日期已登记！') {
                     document.getElementById(uid).children[2].firstElementChild.removeAttribute("style");
                     document.getElementById(uid).children[3].firstElementChild.setAttribute("class", "btn btn--subtle");
+                    document.getElementById(uid).children[3].firstElementChild.removeAttribute("onclick");
                 } else {
                     document.getElementById(uid).children[2].lastElementChild.removeAttribute("style");
                     document.getElementById(uid).children[3].firstElementChild.setAttribute("class", "btn btn--accent");
@@ -95,19 +96,21 @@
 
     function report(uid) {
         let httpRequest = new XMLHttpRequest();
-        httpRequest.open('GET', "http://dluck.synology.me:8086/api/conform?uid=" + uid, true);
+        httpRequest.open('GET', "http://dluck.synology.me:8086/api/conform?uid=" + uid, false);
         httpRequest.send();
         httpRequest.onreadystatechange = function () {
             if (httpRequest.readyState === 4 && httpRequest.status === 200) {
-                if (window.confirm(httpRequest.responseText)) {
-                    let httpRequest2 = new XMLHttpRequest();
-                    httpRequest2.open('GET', "http://dluck.synology.me:8086/api/report?uid=" + uid, true);
-                    httpRequest2.send();
-                    if (httpRequest2.readyState === 4 && httpRequest2.status === 200) {
-                        window.reload();
-                    } else {
-                        window.alert(httpRequest2.responseText);
+                if (httpRequest.responseText === "未打卡") {
+                    if (window.confirm("你要提交的数据如下：\n" + httpRequest.responseText)) {
+                        let httpRequest2 = new XMLHttpRequest();
+                        httpRequest2.open('GET', "http://dluck.synology.me:8086/api/report?uid=" + uid, false);
+                        httpRequest2.send();
+                        if (httpRequest2.readyState === 4 && httpRequest2.status === 200) {
+                            window.alert(httpRequest2.responseText);
+                        }
                     }
+                } else {
+                    alert(httpRequest.responseText);
                 }
             }
         };
