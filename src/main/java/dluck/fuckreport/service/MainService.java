@@ -40,10 +40,48 @@ public class MainService {
 	}
 
 	/**
-	 * get login cookie by user id
+	 * 添加一个用户
+	 * @param uid   学号
+	 * @param name  姓名
+	 * @param pwd   密码
+	 * @param email 邮箱
+	 * @return 成功返回true，否则false
+	 */
+	public boolean addUser(String uid, String name, String pwd, String email) {
+		User user = new User();
+		user.setUid(uid);
+		user.setName(name);
+		user.setPassword(pwd);
+		user.setEmail(email);
+
+		if (userRepository.findById(uid).isPresent()) {
+			return false;
+		} else {
+			userRepository.save(user);
+			return true;
+		}
+	}
+
+	/**
+	 * 删除一个用户
 	 *
-	 * @param uid user id
-	 * @return CookieStore cookie
+	 * @param user 用户对象
+	 * @return 如果成功返回true，否则false
+	 */
+	public boolean removeUser(User user) {
+		if (userRepository.findById(user.getUid()).isPresent()) {
+			userRepository.delete(user);
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * 模拟一次登陆，获取Cookie信息
+	 *
+	 * @param uid 学号
+	 * @return CookieStore对象
 	 */
 	public CookieStore getLoginCookie(String uid) throws IOException {
 		User user = userRepository.findById(uid).orElse(null);
@@ -80,10 +118,10 @@ public class MainService {
 	}
 
 	/**
-	 * get form data
+	 * 模拟一次登陆，如果未打卡获取需要提交的表单，否则获取NULL
 	 *
-	 * @param uid user id
-	 * @return data
+	 * @param uid 学号
+	 * @return 表单对象
 	 */
 	public List<NameValuePair> getPostData(String uid) throws IOException {
 		//创建HttpClient对象
@@ -179,9 +217,9 @@ public class MainService {
 	}
 
 	/**
-	 * do check
+	 * 查询打卡状态接口
 	 *
-	 * @return status
+	 * @return 状态信息字符串
 	 */
 	public String check(String uid) {
 		//创建HttpClient对象
@@ -230,10 +268,10 @@ public class MainService {
 	}
 
 	/**
-	 * do report
+	 * 打卡接口
 	 *
-	 * @param uid user id
-	 * @return status
+	 * @param uid 学号
+	 * @return 操作状态字符串
 	 */
 	public String report(String uid) {
 		//创建HttpClient对象
