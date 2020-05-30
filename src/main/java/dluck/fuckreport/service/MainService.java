@@ -244,8 +244,7 @@ public class MainService {
 	 */
 	public String check(String uid) {
 		//创建HttpClient对象
-		CookieStore cookieStore;
-		cookieStore = getCookies(uid);
+		CookieStore cookieStore = getCookies(uid);
 		if (cookieStore == null) return "系统没有这个用户！";
 
 		CloseableHttpClient httpClient = HttpClients.custom()

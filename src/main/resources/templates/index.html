@@ -86,6 +86,8 @@
                     document.getElementById(uid).children[2].firstElementChild.removeAttribute("style");
                     document.getElementById(uid).children[3].firstElementChild.setAttribute("class", "btn btn--subtle");
                     document.getElementById(uid).children[3].firstElementChild.removeAttribute("onclick");
+                } else if (httpRequest.responseText === "未打卡") {
+                    report(uid);
                 } else {
                     document.getElementById(uid).children[2].lastElementChild.removeAttribute("style");
                     document.getElementById(uid).children[3].firstElementChild.setAttribute("class", "btn btn--accent");
@@ -96,22 +98,8 @@
 
     function report(uid) {
         let xhr = new XMLHttpRequest();
-        xhr.open('GET', "http://dluck.synology.me:8086/api/conform?uid=" + uid, true);
+        xhr.open("GET", "http://dluck.synology.me:8086/api/report?uid=" + uid, true);
         xhr.send();
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                if (confirm(xhr.responseText)) {
-                    let xhr2 = new XMLHttpRequest();
-                    xhr2.open('GET', "http://dluck.synology.me:8086/api/report?uid=" + uid, true);
-                    xhr2.send();
-                    xhr2.onreadystatechange = function () {
-                        if (xhr2.readyState === 4 && xhr2.status === 200) {
-                            alert(xhr2.responseText);
-                        }
-                    }
-                }
-            }
-        };
     }
 </script>
 <script src="../static/scripts.js"></script>
