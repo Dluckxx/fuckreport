@@ -44,13 +44,8 @@ public class ApiController {
 	@GetMapping("conform")
 	public String conform(@RequestParam("uid") String uid) {
 		List<NameValuePair> list;
-		try {
-			list = mainService.getPostData(uid);
-			if (list == null) return "已经打过卡或者出现错误！";
-		} catch (IOException e) {
-			e.printStackTrace();
-			return "获取打卡表单数据出错了！";
-		}
+		list = mainService.getPostData(uid);
+		if (list == null) return "已经打过卡或者出现错误！";
 		StringBuilder sb = new StringBuilder();
 		for (NameValuePair item : list) {
 			sb.append(item.getName())

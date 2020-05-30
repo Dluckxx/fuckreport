@@ -13,6 +13,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 @Service
@@ -80,6 +82,7 @@ public class MainService {
 
 	/**
 	 * 获取全部的用户
+	 *
 	 * @return 用户列表
 	 */
 	public List<User> getAllUser() {
@@ -92,7 +95,7 @@ public class MainService {
 	 * @param uid 学号
 	 * @return CookieStore对象
 	 */
-	public CookieStore getLoginCookie(String uid) throws IOException {
+	public CookieStore login(String uid) throws IOException {
 		User user = userRepository.findById(uid).orElse(null);
 		if (user == null) return null;
 
@@ -127,22 +130,38 @@ public class MainService {
 	}
 
 	/**
+	 * 从数据库获取cookie
+	 * @param uid 学号
+	 * @return CookieStore
+	 */
+	public CookieStore getCookies(String uid) {
+		User user = userRepository.findById(uid).orElse(null);
+		if (user == null) return null;
+
+		CookieStore cookieStore = new BasicCookieStore();
+
+		BasicClientCookie cookie1 = new BasicClientCookie("ASP.NET_SessionId", user.getSessionId());
+		cookie1.setDomain("xsc.sicau.edu.cn");
+		cookie1.setPath("/SPCP/Web/Report/Index");
+
+		BasicClientCookie cookie2 = new BasicClientCookie("CenterSoftWeb", user.getCenterSoftWeb());
+		cookie2.setDomain("xsc.sicau.edu.cn");
+		cookie2.setPath("/SPCP/Web/Report/Index");
+
+		cookieStore.addCookie(cookie1);
+		cookieStore.addCookie(cookie2);
+
+		return cookieStore;
+	}
+
+	/**
 	 * 模拟一次登陆，如果未打卡获取需要提交的表单，否则获取NULL
 	 *
-	 * @param uid 学号
+	 * @param html HTML页面内容
 	 * @return 表单对象
 	 */
-	public List<NameValuePair> getPostData(String uid) throws IOException {
-		//创建HttpClient对象
-		CookieStore cookieStore = getLoginCookie(uid);
-		CloseableHttpClient httpClient = HttpClients.custom()
-				.setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36")
-				.setDefaultCookieStore(cookieStore)
-				.build();
-
-		HttpGet httpGet = new HttpGet(url_report);
-		HttpResponse response = httpClient.execute(httpGet);
-		Document document = Jsoup.parse(EntityUtils.toString(response.getEntity()));
+	public List<NameValuePair> getPostData(String html) {
+		Document document = Jsoup.parse(html);
 		List<NameValuePair> data = new ArrayList<>();
 		Gson gson = new Gson();
 
@@ -211,16 +230,10 @@ public class MainService {
 			data.add(new BasicNameValuePair("PZData", gson.toJson(dataVos)));
 			data.add(new BasicNameValuePair("ReSubmiteFlag", document.getElementsByAttributeValue("name", "ReSubmiteFlag").val()));
 		} else {
-			System.err.println(check(uid));
+			System.err.println("获取表单信息失败，非正常页面！");
 			return null;
 		}
 
-		//释放资源
-		try {
-			httpClient.close();
-		} catch (IOException e) {
-			System.err.println(e.getMessage());
-		}
 		return data;
 	}
 
@@ -232,13 +245,8 @@ public class MainService {
 	public String check(String uid) {
 		//创建HttpClient对象
 		CookieStore cookieStore;
-		try {
-			cookieStore = getLoginCookie(uid);
-			if (cookieStore == null) return "系统没有这个用户！";
-		} catch (IOException e) {
-			e.printStackTrace();
-			return "登陆失败!";
-		}
+		cookieStore = getCookies(uid);
+		if (cookieStore == null) return "系统没有这个用户！";
 
 		CloseableHttpClient httpClient = HttpClients.custom()
 				.setDefaultCookieStore(cookieStore)
@@ -283,15 +291,8 @@ public class MainService {
 	 * @return 操作状态字符串
 	 */
 	public String report(String uid) {
-		//创建HttpClient对象
-		CookieStore cookieStore;
-		try {
-			cookieStore = getLoginCookie(uid);
-			if (cookieStore == null) return "登陆失败！";
-		} catch (IOException e) {
-			e.printStackTrace();
-			return "登陆失败！";
-		}
+		CookieStore cookieStore = getCookies(uid);
+		if (cookieStore == null) return "无法获取cookie！";
 
 		CloseableHttpClient httpClient = HttpClients.custom()
 				.setDefaultCookieStore(cookieStore)
@@ -300,13 +301,15 @@ public class MainService {
 
 		//新建POST对象，开始访问打卡界面
 		HttpPost httpPost = new HttpPost(url_report);
+		HttpGet httpGet = new HttpGet(url_report);
 		HttpResponse response;
 		UrlEncodedFormEntity entity;
 		List<NameValuePair> data;
 
 		//拉取表单信息
 		try {
-			data = getPostData(uid);
+			response = httpClient.execute(httpGet);
+			data = getPostData(EntityUtils.toString(response.getEntity()));
 			entity = new UrlEncodedFormEntity(data, "utf-8");
 			httpPost.setEntity(entity);
 		} catch (UnsupportedEncodingException e) {

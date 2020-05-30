@@ -19,6 +19,10 @@ public class User {
 	private String name;
 	@Column(nullable = false)
 	private String email;
+	@Column
+	private String sessionId;
+	@Column(length = 1024)
+	private String centerSoftWeb;
 
 	public String getUid() {
 		return uid;
@@ -50,5 +54,21 @@ public class User {
 
 	public void setEmail(String email) {
 		this.email = email;
+	}
+
+	public String getSessionId() {
+		return sessionId;
+	}
+
+	public void setSessionId(String sessionId) {
+		this.sessionId = sessionId;
+	}
+
+	public String getCenterSoftWeb() {
+		return centerSoftWeb;
+	}
+
+	public void setCenterSoftWeb(String centerSoftWeb) {
+		this.centerSoftWeb = centerSoftWeb;
 	}
 }

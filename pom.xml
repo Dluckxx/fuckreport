@@ -10,7 +10,7 @@
     </parent>
     <groupId>dluck</groupId>
     <artifactId>fuckreport</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
     <name>fuckreport</name>
     <description>A simple auto report service for sicau during nCoV.</description>
 

@@ -95,22 +95,20 @@
     }
 
     function report(uid) {
-        let httpRequest = new XMLHttpRequest();
-        httpRequest.open('GET', "http://dluck.synology.me:8086/api/conform?uid=" + uid, false);
-        httpRequest.send();
-        httpRequest.onreadystatechange = function () {
-            if (httpRequest.readyState === 4 && httpRequest.status === 200) {
-                if (httpRequest.responseText === "未打卡") {
-                    if (window.confirm("你要提交的数据如下：\n" + httpRequest.responseText)) {
-                        let httpRequest2 = new XMLHttpRequest();
-                        httpRequest2.open('GET', "http://dluck.synology.me:8086/api/report?uid=" + uid, false);
-                        httpRequest2.send();
-                        if (httpRequest2.readyState === 4 && httpRequest2.status === 200) {
-                            window.alert(httpRequest2.responseText);
+        let xhr = new XMLHttpRequest();
+        xhr.open('GET', "http://dluck.synology.me:8086/api/conform?uid=" + uid, true);
+        xhr.send();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                if (confirm(xhr.responseText)) {
+                    let xhr2 = new XMLHttpRequest();
+                    xhr2.open('GET', "http://dluck.synology.me:8086/api/report?uid=" + uid, true);
+                    xhr2.send();
+                    xhr2.onreadystatechange = function () {
+                        if (xhr2.readyState === 4 && xhr2.status === 200) {
+                            alert(xhr2.responseText);
                         }
                     }
-                } else {
-                    alert(httpRequest.responseText);
                 }
             }
         };
