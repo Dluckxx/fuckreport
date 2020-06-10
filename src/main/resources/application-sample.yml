@@ -1,0 +1,22 @@
+#使用时去掉"-sample"，并修改参数为自己的配置
+spring:
+  thymeleaf:
+    prefix: classpath:templates/
+    suffix: .html
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/fuckreport
+    username: fuckreport
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  mvc:
+    static-path-pattern: /static/**
+  mail:
+    host: smtp.163.com
+    username: sample@163.com
+    password: password
+    properties:
+      from: sample@163.com
