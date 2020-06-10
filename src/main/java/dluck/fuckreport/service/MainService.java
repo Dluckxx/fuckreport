@@ -142,11 +142,11 @@ public class MainService {
 
 		BasicClientCookie cookie1 = new BasicClientCookie("ASP.NET_SessionId", user.getSessionId());
 		cookie1.setDomain("xsc.sicau.edu.cn");
-		cookie1.setPath("/SPCP/Web/Report/Index");
+		cookie1.setPath("/");
 
 		BasicClientCookie cookie2 = new BasicClientCookie("CenterSoftWeb", user.getCenterSoftWeb());
 		cookie2.setDomain("xsc.sicau.edu.cn");
-		cookie2.setPath("/SPCP/Web/Report/Index");
+		cookie2.setPath("/");
 
 		cookieStore.addCookie(cookie1);
 		cookieStore.addCookie(cookie2);
@@ -155,7 +155,7 @@ public class MainService {
 	}
 
 	/**
-	 * 模拟一次登陆，如果未打卡获取需要提交的表单，否则获取NULL
+	 * 通过html文本获取打卡数据，如果未打卡获取需要提交的表单，否则获取NULL
 	 *
 	 * @param html HTML页面内容
 	 * @return 表单对象
@@ -245,7 +245,7 @@ public class MainService {
 	public String check(String uid) {
 		//创建HttpClient对象
 		CookieStore cookieStore = getCookies(uid);
-		if (cookieStore == null) return "系统没有这个用户！";
+		if (cookieStore == null) return "Cookie为null";
 
 		CloseableHttpClient httpClient = HttpClients.custom()
 				.setDefaultCookieStore(cookieStore)
@@ -333,4 +333,12 @@ public class MainService {
 		}
 	}
 
+	/**
+	 * 打卡数据库全部用户
+	 */
+	public void reportAll(){
+		for (User user : userRepository.findAll()) {
+			report(user.getUid());
+		}
+	}
 }
