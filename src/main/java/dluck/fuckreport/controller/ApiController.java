@@ -1,5 +1,6 @@
 package dluck.fuckreport.controller;
 
+import dluck.fuckreport.service.MailService;
 import dluck.fuckreport.service.MainService;
 import org.apache.http.NameValuePair;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,7 @@ public class ApiController {
 	 */
 	@GetMapping("check")
 	public String check(@RequestParam("uid") String uid) {
-		return mainService.check(uid);
+		return mainService.check(mainService.getUserByID(uid));
 	}
 
 	/**
@@ -62,7 +63,10 @@ public class ApiController {
 	 */
 	@GetMapping("report")
 	public String report(@RequestParam("uid") String uid) {
-		return mainService.report(uid);
+		if (mainService.getUserByID(uid) == null)
+			return "没有找到用户";
+		else
+			return mainService.report(mainService.getUserByID(uid));
 	}
 
 	/**

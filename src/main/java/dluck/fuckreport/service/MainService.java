@@ -35,10 +35,12 @@ public class MainService {
 	private final String url_login = "http://xsc.sicau.edu.cn/SPCP/Web/";
 	private final String url_report = "http://xsc.sicau.edu.cn/SPCP/Web/Report/Index";
 	private final UserRepository userRepository;
+	private final MailService mailService;
 
 	@Autowired
-	public MainService(UserRepository userRepository) {
+	public MainService(UserRepository userRepository, MailService mailService) {
 		this.userRepository = userRepository;
+		this.mailService = mailService;
 	}
 
 	/**
@@ -87,6 +89,15 @@ public class MainService {
 	 */
 	public List<User> getAllUser() {
 		return userRepository.findAll();
+	}
+
+	/**
+	 * 根据ID获取一个用户，没找到则返回null
+	 * @param uid 学号
+	 * @return 用户对象
+	 */
+	public User getUserByID(String uid){
+		return  userRepository.findById(uid).orElse(null);
 	}
 
 	/**
@@ -242,9 +253,9 @@ public class MainService {
 	 *
 	 * @return 状态信息字符串
 	 */
-	public String check(String uid) {
+	public String check(User user) {
 		//创建HttpClient对象
-		CookieStore cookieStore = getCookies(uid);
+		CookieStore cookieStore = getCookies(user.getUid());
 		if (cookieStore == null) return "Cookie为null";
 
 		CloseableHttpClient httpClient = HttpClients.custom()
@@ -286,11 +297,11 @@ public class MainService {
 	/**
 	 * 打卡接口
 	 *
-	 * @param uid 学号
+	 * @param user 用户
 	 * @return 操作状态字符串
 	 */
-	public String report(String uid) {
-		CookieStore cookieStore = getCookies(uid);
+	public String report(User user) {
+		CookieStore cookieStore = getCookies(user.getUid());
 		if (cookieStore == null) return "无法获取cookie！";
 
 		CloseableHttpClient httpClient = HttpClients.custom()
@@ -322,23 +333,22 @@ public class MainService {
 		//提交数据
 		try {
 			response = httpClient.execute(httpPost);
-			//验证数据
+			StringBuilder dataHandler = new StringBuilder();
+			for (NameValuePair pair : data) {
+				dataHandler.append(pair.getName());
+				dataHandler.append(" : ");
+				dataHandler.append(pair.getValue());
+			}
+			//验证数据，发送邮件给用户
 			if (response.getStatusLine().getStatusCode() == 200) {
+				mailService.sendReportSuccessEmail(user.getEmail(), dataHandler.toString());
 				return "提交成功！";
 			} else {
+				mailService.sendReportFailedEmail(user.getEmail(), "打卡请求提交失败了！");
 				return "提交失败：" + response.getStatusLine();
 			}
 		} catch (IOException e) {
-			return "打卡界面访问失败！";
-		}
-	}
-
-	/**
-	 * 打卡数据库全部用户
-	 */
-	public void reportAll(){
-		for (User user : userRepository.findAll()) {
-			report(user.getUid());
+			return "打卡页面访问失败！";
 		}
 	}
 }

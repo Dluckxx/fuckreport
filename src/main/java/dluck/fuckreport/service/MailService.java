@@ -1,40 +1,53 @@
 package dluck.fuckreport.service;
 
+import dluck.fuckreport.dao.UserRepository;
+import dluck.fuckreport.domain.User;
 import dluck.fuckreport.vo.MailVo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import java.io.File;
 import java.util.Date;
 import java.util.Objects;
 
 @Service
 public class MailService {
 
+	private final JavaMailSenderImpl mailSender;//注入邮件工具类
+
 	@Autowired
-	private JavaMailSenderImpl mailSender;//注入邮件工具类
+	public MailService(JavaMailSenderImpl mailSender) {
+		this.mailSender = mailSender;
+	}
 
-	/**
-	 * 发送邮件
-	 */
-	public MailVo sendMail(MailVo mailVo) {
-		try {
-			checkMail(mailVo); //1.检测邮件
-			sendMimeMail(mailVo); //2.发送邮件
-			return saveMail(mailVo); //3.保存邮件
-		} catch (Exception e) {
-			mailVo.setStatus("fail");
-			mailVo.setError(e.getMessage());
-			return mailVo;
-		}
+	//发送自定义邮件
+	public void sendSimpleEmail(String email, String subject, String data) {
+		MailVo mailVo = new MailVo();
+		mailVo.setTo(email);
+		mailVo.setSubject(subject);
+		mailVo.setText(data);
+		sendMail(mailVo);
+	}
 
+	//发送打卡成功邮件
+	public void sendReportSuccessEmail(String email, String data) {
+		MailVo mailVo = new MailVo();
+		mailVo.setTo(email);
+		mailVo.setSubject("自动打卡成功！");
+		mailVo.setText("打卡成功！发送到服务器的数据如下：\n" + data);
+		sendMail(mailVo);
+	}
+
+	//发送打卡失败邮件
+	public void sendReportFailedEmail(String email, String message) {
+		MailVo mailVo = new MailVo();
+		mailVo.setTo(email);
+		mailVo.setSubject("自动打卡失败！");
+		mailVo.setText("打卡失败！失败原因：\n" + message);
+		sendMail(mailVo);
 	}
 
 	//检测邮件信息类
@@ -51,7 +64,7 @@ public class MailService {
 	}
 
 	//构建复杂邮件信息类
-	private void sendMimeMail(MailVo mailVo) {
+	private void sendMail(MailVo mailVo) {
 		try {
 			MimeMessageHelper messageHelper = new MimeMessageHelper(mailSender.createMimeMessage(), true);//true表示支持复杂类型
 			mailVo.setFrom(getMailSendFrom()); //邮件发信人从配置项读取
@@ -79,12 +92,6 @@ public class MailService {
 		} catch (Exception e) {
 			throw new RuntimeException(e);//发送失败
 		}
-	}
-
-	//保存邮件
-	private MailVo saveMail(MailVo mailVo) {
-		//将邮件保存到数据库..
-		return mailVo;
 	}
 
 	//获取邮件发信人
