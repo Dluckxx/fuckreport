@@ -31,7 +31,11 @@ public class ApiController {
 	 */
 	@GetMapping("check")
 	public String check(@RequestParam("uid") String uid) {
-		return mainService.check(mainService.getUserByID(uid));
+		if (mainService.getUserByID(uid) == null)
+			return "学号为NULL";
+		else {
+			return mainService.check(mainService.getUserByID(uid));
+		}
 	}
 
 	/**
