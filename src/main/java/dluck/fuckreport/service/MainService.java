@@ -336,8 +336,9 @@ public class MainService {
 			StringBuilder dataHandler = new StringBuilder();
 			for (NameValuePair pair : data) {
 				dataHandler.append(pair.getName());
-				dataHandler.append(" : ");
+				dataHandler.append("：");
 				dataHandler.append(pair.getValue());
+				dataHandler.append("\n");
 			}
 			//验证数据，发送邮件给用户
 			if (response.getStatusLine().getStatusCode() == 200) {
