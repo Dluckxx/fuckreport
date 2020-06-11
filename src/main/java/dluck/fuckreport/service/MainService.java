@@ -1,6 +1,7 @@
 package dluck.fuckreport.service;
 
 import com.google.gson.Gson;
+import dluck.fuckreport.ScheduledTasks;
 import dluck.fuckreport.domain.User;
 import dluck.fuckreport.dao.UserRepository;
 import dluck.fuckreport.vo.PZDataVo;
@@ -22,6 +23,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +35,7 @@ import java.util.List;
 
 @Service
 public class MainService {
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	private final String url_login = "http://xsc.sicau.edu.cn/SPCP/Web/";
 	private final String url_report = "http://xsc.sicau.edu.cn/SPCP/Web/Report/Index";
 	private final String url_code = "http://xsc.sicau.edu.cn/SPCP/Web/Account/GetLoginVCode";
@@ -110,7 +114,7 @@ public class MainService {
 	 */
 	public boolean login(User user, String code) {
 		//创建HttpClient对象
-		CookieStore cookieStore = new BasicCookieStore();
+		CookieStore cookieStore = getLocalCookies(user);
 		CloseableHttpClient httpClient = HttpClients.custom()
 				.setDefaultCookieStore(cookieStore)
 				.setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36")
@@ -131,7 +135,14 @@ public class MainService {
 			httpPost.setEntity(new UrlEncodedFormEntity(data, "utf-8"));
 			HttpResponse response = httpClient.execute(httpPost);
 			Document doc = Jsoup.parse(EntityUtils.toString(response.getEntity()));
-			return doc.title().equals("Object moved");
+			if (doc.title().equals("Object moved")) {
+				setLocalCookies(user, cookieStore);
+				logger.info("login: 用户[{}]完成了一次登陆", user.getName());
+				return true;
+			} else {
+				logger.info("login: 用户[{}]尝试登陆失败！", user.getName());
+				return false;
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 			return false;
@@ -145,7 +156,7 @@ public class MainService {
 	}
 
 	/**
-	 * 获取登陆验证码的文件输入流
+	 * 获取登陆验证码的图片文件输入流
 	 *
 	 * @return url
 	 */

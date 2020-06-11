@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>登陆验证</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script>document.getElementsByTagName("html")[0].className += " js";</script>
+    <link id="codyframe" rel="stylesheet" href="../static/style.css">
+    <!-- browsers not supporting CSS variables -->
+    <script>
+        if (!('CSS' in window) || !CSS.supports('color', 'var(--color-var)')) {
+            var cfStyle = document.getElementById('codyframe');
+            if (cfStyle) {
+                var href = cfStyle.getAttribute('href');
+                href = href.replace('style.css', 'style-fallback.css');
+                cfStyle.setAttribute('href', href);
+            }
+        }
+    </script>
+</head>
+<body>
+<div class="container max-width-lg">
+    <div class="max-width-md">
+        <div class="text-component text-center margin-bottom-sm">
+            <h1>重新验证你的账号</h1>
+            <p id="message">身份验证已经过期，需要重设验证码。</p>
+        </div>
+        <div class="margin-bottom-sm">
+            <div class="grid gap-xs">
+                <div class="col-6@md">
+                    <label class="form-label margin-bottom-xxxs" for="name">姓名</label>
+                    <input class="form-control width-100%" type="text" name="name" id="name"
+                           th:value="${user.getName()}">
+                </div>
+                <div class="col-6@md">
+                    <label class="form-label margin-bottom-xxxs" for="uid">学号</label>
+                    <input class="form-control width-100%" type="text" name="uid" id="uid" th:value="${user.getUid()}">
+                </div>
+            </div>
+            <div class="grid gap-xs">
+                <div class="col-6@md">
+                    <label class="form-label margin-bottom-xxxs" for="code">输入验证码：</label>
+                    <input class="form-control width-100%" type="text" name="code" id="code">
+                </div>
+                <div class="col-6@md">
+                    <img class="block margin-auto margin-top-sm" src="" th:src="'/api/code?uid='+${user.getUid()}"
+                         alt="验证码获取失败">
+                </div>
+            </div>
+        </div>
+        <div class="margin-bottom-sm">
+            <button class="btn btn--primary btn--md width-100%" onclick="login()">一键起飞</button>
+        </div>
+
+        <div class="text-center">
+            <p class="text-xs color-contrast-medium">大概几天需要重新输入一次</p>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    function login() {
+        let uid = document.getElementById("uid").value;
+        let code = document.getElementById("code").value;
+        let url = "/api/login?uid=" + uid + "&code=" + code;
+        xhr = new XMLHttpRequest();
+        xhr.open("GET", url, true);
+        xhr.send();
+        xhr.onload = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                if (xhr.responseText === "登陆成功！")
+                    document.getElementById("message").setAttribute("class", "text-lg color-success")
+                else
+                    document.getElementById("message").setAttribute("class", "text-lg color-error")
+                document.getElementById("message").innerHTML = xhr.responseText + "，将在3秒内跳转回首页！"
+                setTimeout("location.href='/'", 3000);
+            }
+        }
+    }
+</script>
+<script src="../static/scripts.js"></script>
+</html>

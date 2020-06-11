@@ -69,12 +69,12 @@
         data.append("email", document.getElementById("email").value);
 
         let xhr = new XMLHttpRequest();
-        xhr.open("POST", "http://dluck.synology.me:8086/api/register", true);
+        xhr.open("POST", "/api/register", true);
         xhr.send(data);
         xhr.onload = function () {
             if (xhr.readyState === 4 && xhr.status === 200) {
                 alert(xhr.responseText);
-                location.href = "http://dluck.synology.me:8086";
+                location.href = "/";
             }
         }
     }

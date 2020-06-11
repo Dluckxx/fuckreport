@@ -114,17 +114,33 @@ public class ApiController {
 		response.setContentType("image/jpeg");
 		try {
 			InputStream in = mainService.getLoginCodeImage(user);
-			OutputStream os = response.getOutputStream();
-			byte[] b = new byte[1024];
-			while (in.read(b) != -1) {
-				os.write(b);
+			OutputStream out = response.getOutputStream();
+			int length;
+			byte[] buff = new byte[1024];
+			while ((length = in.read(buff)) > 0) {
+				out.write(buff, 0, length);
 			}
+			out.flush();
 			in.close();
-			os.flush();
-			os.close();
+			out.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	/**
+	 * 登陆接口
+	 */
+	@GetMapping("login")
+	public String login(@RequestParam("uid") String uid,
+	                    @RequestParam("code") String code) {
+		User user = mainService.getUserByID(uid);
+		if (user == null) return "没有这个用户";
+		if (mainService.login(user, code)){
+			return "登陆成功";
+		} else {
+			return "登陆失败";
+		}
 	}
 }

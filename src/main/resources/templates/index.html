@@ -56,13 +56,13 @@
             <!--3.操作-->
             <td class="table__cell text-center" role="cell">
                 <button class="btn btn--accent" th:data-id="${user.getUid()}"
-                        onclick="report(this.getAttribute('data-id'))"> 打卡
+                        onclick="location.href='/login?uid='+this.getAttribute('data-id')"> 验证码
                 </button>
             </td>
         </tr>
         </tbody>
     </table>
-    <a class="max-width-xxxs margin-auto margin-top-lg block" href="http://dluck.synology.me:8086/register">
+    <a class="max-width-xxxs margin-auto margin-top-lg block" href="/register">
         <button class="btn btn--primary">点我去注册！</button>
     </a>
 </div>
@@ -77,7 +77,7 @@
 
     function load(uid) {
         let httpRequest = new XMLHttpRequest();
-        httpRequest.open('GET', "http://dluck.synology.me:8086/api/check?uid=" + uid, true);
+        httpRequest.open('GET', "/api/check?uid=" + uid, true);
         httpRequest.send();
         httpRequest.onreadystatechange = function () {
             if (httpRequest.readyState === 4 && httpRequest.status === 200) {
@@ -98,7 +98,7 @@
 
     function report(uid) {
         let xhr = new XMLHttpRequest();
-        xhr.open("GET", "http://dluck.synology.me:8086/api/report?uid=" + uid, true);
+        xhr.open("GET", "/api/report?uid=" + uid, true);
         xhr.send();
     }
 </script>
