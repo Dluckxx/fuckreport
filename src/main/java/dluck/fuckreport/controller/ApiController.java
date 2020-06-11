@@ -1,11 +1,13 @@
 package dluck.fuckreport.controller;
 
-import dluck.fuckreport.service.MailService;
+import dluck.fuckreport.domain.User;
 import dluck.fuckreport.service.MainService;
 import org.apache.http.NameValuePair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
 import java.util.List;
 
 
@@ -100,5 +102,29 @@ public class ApiController {
 	@GetMapping("delete")
 	public String delete(@RequestParam("uid") String uid) {
 		return mainService.removeUser(uid) ? "成功！" : "失败！";
+	}
+
+	/**
+	 * 获取验证码接口
+	 */
+	@GetMapping("code")
+	public String code(@RequestParam("uid") String uid, HttpServletResponse response) {
+		User user = mainService.getUserByID(uid);
+		if (user == null) return null;
+		response.setContentType("image/jpeg");
+		try {
+			InputStream in = mainService.getLoginCodeImage(user);
+			OutputStream os = response.getOutputStream();
+			byte[] b = new byte[1024];
+			while (in.read(b) != -1) {
+				os.write(b);
+			}
+			in.close();
+			os.flush();
+			os.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 }

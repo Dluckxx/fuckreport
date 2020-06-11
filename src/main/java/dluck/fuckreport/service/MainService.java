@@ -10,6 +10,7 @@ import org.apache.http.client.CookieStore;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -24,16 +25,16 @@ import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 @Service
 public class MainService {
 	private final String url_login = "http://xsc.sicau.edu.cn/SPCP/Web/";
 	private final String url_report = "http://xsc.sicau.edu.cn/SPCP/Web/Report/Index";
+	private final String url_code = "http://xsc.sicau.edu.cn/SPCP/Web/Account/GetLoginVCode";
 	private final UserRepository userRepository;
 	private final MailService mailService;
 
@@ -93,23 +94,21 @@ public class MainService {
 
 	/**
 	 * 根据ID获取一个用户，没找到则返回null
+	 *
 	 * @param uid 学号
 	 * @return 用户对象
 	 */
-	public User getUserByID(String uid){
-		return  userRepository.findById(uid).orElse(null);
+	public User getUserByID(String uid) {
+		return userRepository.findById(uid).orElse(null);
 	}
 
 	/**
-	 * 模拟一次登陆，获取Cookie信息
+	 * 模拟一次登陆，获取Cookie信息并保存到数据库
 	 *
-	 * @param uid 学号
-	 * @return CookieStore对象
+	 * @param user 用户对象
+	 * @return 成功：true；失败：false
 	 */
-	public CookieStore login(String uid) throws IOException {
-		User user = userRepository.findById(uid).orElse(null);
-		if (user == null) return null;
-
+	public boolean login(User user, String code) {
 		//创建HttpClient对象
 		CookieStore cookieStore = new BasicCookieStore();
 		CloseableHttpClient httpClient = HttpClients.custom()
@@ -125,44 +124,53 @@ public class MainService {
 		List<NameValuePair> data = new ArrayList<>();
 		data.add(new BasicNameValuePair("txtUid", user.getUid()));
 		data.add(new BasicNameValuePair("txtPwd", user.getPassword()));
-
+		data.add(new BasicNameValuePair("code", code));
 
 		//带入表单数据
-		httpPost.setEntity(new UrlEncodedFormEntity(data, "utf-8"));
-		httpClient.execute(httpPost);
-
 		try {
-			httpClient.close();
+			httpPost.setEntity(new UrlEncodedFormEntity(data, "utf-8"));
+			HttpResponse response = httpClient.execute(httpPost);
+			Document doc = Jsoup.parse(EntityUtils.toString(response.getEntity()));
+			return doc.title().equals("Object moved");
 		} catch (IOException e) {
-			System.err.println(e.getMessage());
+			e.printStackTrace();
+			return false;
+		} finally {
+			try {
+				httpClient.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
-
-		return cookieStore;
 	}
 
 	/**
-	 * 从数据库获取cookie
-	 * @param uid 学号
-	 * @return CookieStore
+	 * 获取登陆验证码的文件输入流
+	 *
+	 * @return url
 	 */
-	public CookieStore getCookies(String uid) {
-		User user = userRepository.findById(uid).orElse(null);
-		if (user == null) return null;
-
+	public InputStream getLoginCodeImage(User user) {
+		String url_local = url_code + "?dt=" + new Date().getTime();
 		CookieStore cookieStore = new BasicCookieStore();
+		CloseableHttpClient httpClient = HttpClients.custom()
+				.setUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36")
+				.setDefaultCookieStore(cookieStore)
+				.build();
 
-		BasicClientCookie cookie1 = new BasicClientCookie("ASP.NET_SessionId", user.getSessionId());
-		cookie1.setDomain("xsc.sicau.edu.cn");
-		cookie1.setPath("/");
+		HttpGet httpGet = new HttpGet(url_local);
 
-		BasicClientCookie cookie2 = new BasicClientCookie("CenterSoftWeb", user.getCenterSoftWeb());
-		cookie2.setDomain("xsc.sicau.edu.cn");
-		cookie2.setPath("/");
-
-		cookieStore.addCookie(cookie1);
-		cookieStore.addCookie(cookie2);
-
-		return cookieStore;
+		try {
+			HttpResponse response = httpClient.execute(httpGet);
+			setLocalCookies(user, cookieStore); //保存cookie
+			if (response.getEntity().getContentType().getValue().equals("image/JPEG")) {
+				return response.getEntity().getContent();
+			} else {
+				return null;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	/**
@@ -255,7 +263,7 @@ public class MainService {
 	 */
 	public String check(User user) {
 		//创建HttpClient对象
-		CookieStore cookieStore = getCookies(user.getUid());
+		CookieStore cookieStore = getLocalCookies(user);
 		if (cookieStore == null) return "Cookie为null";
 
 		CloseableHttpClient httpClient = HttpClients.custom()
@@ -295,13 +303,13 @@ public class MainService {
 	}
 
 	/**
-	 * 打卡接口
+	 * 打卡接口，返回打卡操作结果
 	 *
 	 * @param user 用户
 	 * @return 操作状态字符串
 	 */
 	public String report(User user) {
-		CookieStore cookieStore = getCookies(user.getUid());
+		CookieStore cookieStore = getLocalCookies(user);
 		if (cookieStore == null) return "无法获取cookie！";
 
 		CloseableHttpClient httpClient = HttpClients.custom()
@@ -351,5 +359,47 @@ public class MainService {
 		} catch (IOException e) {
 			return "打卡页面访问失败！";
 		}
+	}
+
+	/**
+	 * 从数据库获取cookie
+	 *
+	 * @param user 用户对象
+	 * @return CookieStore
+	 */
+	private CookieStore getLocalCookies(User user) {
+		if (user == null) return null;
+
+		CookieStore cookieStore = new BasicCookieStore();
+
+		BasicClientCookie cookie1 = new BasicClientCookie("ASP.NET_SessionId", user.getSessionId());
+		cookie1.setDomain("xsc.sicau.edu.cn");
+		cookie1.setPath("/");
+
+		BasicClientCookie cookie2 = new BasicClientCookie("CenterSoftWeb", user.getCenterSoftWeb());
+		cookie2.setDomain("xsc.sicau.edu.cn");
+		cookie2.setPath("/");
+
+		cookieStore.addCookie(cookie1);
+		cookieStore.addCookie(cookie2);
+
+		return cookieStore;
+	}
+
+	/**
+	 * 保存cookie到数据库
+	 *
+	 * @param user        用户对象
+	 * @param cookieStore cookie对象
+	 */
+	private void setLocalCookies(User user, CookieStore cookieStore) {
+		List<Cookie> cookies = cookieStore.getCookies();
+		for (Cookie cookie : cookies) {
+			if (cookie.getName().equals("ASP.NET_SessionId"))
+				user.setSessionId(cookie.getValue());
+			else if (cookie.getName().equals("CenterSoftWeb"))
+				user.setCenterSoftWeb(cookie.getValue());
+		}
+		userRepository.save(user);
 	}
 }
